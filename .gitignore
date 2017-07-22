@@ -17,3 +17,4 @@ Caddyfile
 og_static/
 
 .vscode/
+caddy.exe

@@ -155,6 +155,7 @@ func (u *staticUpstream) NewHost(host string) (*UpstreamHost, error) {
 	}
 	uh := &UpstreamHost{
 		Name:              host,
+		From:              u.From(),
 		Conns:             0,
 		Fails:             0,
 		FailTimeout:       u.FailTimeout,
@@ -180,8 +181,7 @@ func (u *staticUpstream) NewHost(host string) (*UpstreamHost, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	uh.ReverseProxy = NewSingleHostReverseProxy(baseURL, uh.WithoutPathPrefix, u.KeepAlive)
+	uh.ReverseProxy = NewSingleHostReverseProxy(baseURL, uh.WithoutPathPrefix, u.KeepAlive, u.From())
 	if u.insecureSkipVerify {
 		uh.ReverseProxy.UseInsecureTransport()
 	}

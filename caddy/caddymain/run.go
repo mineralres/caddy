@@ -93,7 +93,6 @@ func Run() {
 		fmt.Println(caddy.DescribePlugins())
 		os.Exit(0)
 	}
-
 	// Set CPU cap
 	err := setCPU(cpu)
 	if err != nil {
@@ -108,7 +107,6 @@ func Run() {
 	if err != nil {
 		mustLogFatalf("%v", err)
 	}
-
 	if validate {
 		err := caddy.ValidateAndExecuteDirectives(caddyfileinput, nil, true)
 		if err != nil {

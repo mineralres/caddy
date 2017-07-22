@@ -23,6 +23,8 @@ import (
 
 	"golang.org/x/net/http2"
 
+	"fmt"
+
 	"github.com/mholt/caddy/caddyhttp/httpserver"
 )
 
@@ -73,6 +75,9 @@ type ReverseProxy struct {
 	// response body.
 	// If zero, no periodic flushing is done.
 	FlushInterval time.Duration
+
+	// As ta service proxy
+	TasProxy bool
 }
 
 // Though the relevant directive prefix is just "unix:", url.Parse
@@ -105,7 +110,7 @@ func singleJoiningSlash(a, b string) string {
 // the target request will be for /base/dir.
 // Without logic: target's path is "/", incoming is "/api/messages",
 // without is "/api", then the target request will be for /messages.
-func NewSingleHostReverseProxy(target *url.URL, without string, keepalive int) *ReverseProxy {
+func NewSingleHostReverseProxy(target *url.URL, without string, keepalive int, from string) *ReverseProxy {
 	targetQuery := target.RawQuery
 	director := func(req *http.Request) {
 		if target.Scheme == "unix" {
@@ -180,7 +185,7 @@ func NewSingleHostReverseProxy(target *url.URL, without string, keepalive int) *
 			req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
 		}
 	}
-	rp := &ReverseProxy{Director: director, FlushInterval: 250 * time.Millisecond} // flushing good for streaming & server-sent events
+	rp := &ReverseProxy{Director: director, FlushInterval: 250 * time.Millisecond, TasProxy: from == "/tas"} // flushing good for streaming & server-sent events
 	if target.Scheme == "unix" {
 		rp.Transport = &http.Transport{
 			Dial: socketDial(target.String()),
@@ -245,7 +250,9 @@ func (rp *ReverseProxy) ServeHTTP(rw http.ResponseWriter, outreq *http.Request, 
 	}
 
 	rp.Director(outreq)
-
+	if rp.TasProxy {
+		fmt.Println("test", *outreq.URL)
+	}
 	res, err := transport.RoundTrip(outreq)
 	if err != nil {
 		return err
